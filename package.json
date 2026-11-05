@@ -1,0 +1,45 @@
+{
+  "name": "dsh-subproject-skills",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH per-session skills for independent subprojects in one workspace",
+  "main": "index.mjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./index.mjs",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "index.mjs",
+    "package.json",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale",
+    "README.md",
+    "install.cjs",
+    "install.command",
+    "install.ps1",
+    "scripts",
+    "test"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jswalter/dsh-subproject-skills.git"
+  },
+  "homepage": "https://github.com/jswalter/dsh-subproject-skills#readme",
+  "bugs": {
+    "url": "https://github.com/jswalter/dsh-subproject-skills/issues"
+  },
+  "scripts": {
+    "test": "sh scripts/test.sh"
+  }
+}

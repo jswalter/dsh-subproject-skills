@@ -1,0 +1,4 @@
+- insert:
+    - id: subproject-skills
+      name: dsh-subproject-skills
+      config: {}
