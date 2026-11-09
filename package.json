@@ -1,6 +1,6 @@
 {
   "name": "@jswalter/dsh-subproject-skills",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "type": "module",
   "description": "DSH per-session skills for independent subprojects in one workspace",
   "main": "index.mjs",
@@ -39,10 +39,14 @@
     "url": "https://github.com/jswalter/dsh-subproject-skills/issues"
   },
   "scripts": {
-    "test": "sh scripts/test.sh"
+    "test": "sh scripts/test.sh",
+    "test:ci": "node --test test/install.test.cjs test/release.test.cjs"
   },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "yaml": "2.9.1"
   }
 }

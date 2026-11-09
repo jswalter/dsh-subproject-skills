@@ -1,6 +1,6 @@
 # DSH 子项目技能插件
 
-项目地址：[jswalter/dsh-subproject-skills](https://github.com/jswalter/dsh-subproject-skills)，版本 1.2.2。按 DSH 聊天工作目录加载一个多项目工作区内的直属子项目技能，防止兄弟项目的同名技能互相混入。
+项目地址：[jswalter/dsh-subproject-skills](https://github.com/jswalter/dsh-subproject-skills)，版本 1.2.3。按 DSH 聊天工作目录加载一个多项目工作区内的直属子项目技能，防止兄弟项目的同名技能互相混入。
 
 本仓库包含完整源码及安装器，不依赖其他仓库。包名为 `@jswalter/dsh-subproject-skills`；工作区由 `--workspace` 指定，可用于任意包含直属子项目的工作区。
 
@@ -71,3 +71,20 @@ sh install.command --uninstall
 Windows 使用 `.\install.ps1 -Uninstall -AppPath '实际应用路径'`。也可在 DSH 插件管理器卸载。命令行入口同时清理本插件托管配置；保留源码、技能及备份。备份位于 `$DSH_HOME/backups/local-bundle-skills-*/`，可能含个人配置，不提交 Git。
 
 DSH preset 层的同名技能优先于 host 层，不应再把这些子项目技能复制到用户级目录。DSH 升级后若路径或提供方 API 变化，应重跑安装器并复测。
+
+## 维护者：GitHub Release 自动发布 npm
+
+正式 GitHub Release 的 `published` 事件会运行 `.github/workflows/publish.yml`：锁定依赖安装、CI 测试、版本和打包内容校验通过后，通过 npm Trusted Publishing（OIDC）发布到 `latest`。预发布 Release 会跳过。无需在 GitHub 保存 npm 令牌，也不需要逐次在 npm 网页批准。
+
+发布步骤：
+
+1. 提高 `package.json` 和 `package-lock.json` 的版本号，并更新本 README 的当前版本。划词插件还需同步 `native/Info.plist` 的版本号并递增 build。
+2. 完成本机 DSH 集成测试（`sh scripts/test.sh`），提交并推送代码。
+3. 在 GitHub 创建正式 Release，标签必须严格等于 `v` 加包版本号，例如 `v1.2.3`，并指向上述提交。
+4. 等待 Actions 的 **Publish npm package** 成功；流程会等待 npm 扫描，并核对注册表中的包摘要与已测试的安装包一致。之后在 DSH 插件详情的“版本”区点击“重新检查”。
+
+Actions 的 **Run workflow** 只做验证，不发布。若上传已成功但 npm 扫描超时，可待处理结束后重跑失败任务；相同版本且安装包摘要一致会跳过上传，不覆盖已有版本。网络或权限错误会明确失败，不当作“尚未发布”。
+
+两个 npm 包的可信发布配置分别绑定 GitHub 用户 `jswalter`、各自仓库名及 `publish.yml`，允许直接 `npm publish`。工作流无需长期凭据。只有发布正式 Release 才触发 npm 更新，普通提交和仅推送标签不会发布。
+
+云端使用 macOS runner 执行不依赖 DSH 安装的测试；划词插件另外编译并自检 Swift 辅助程序。完整宿主、模型适配器和实时设置集成测试仍需在装有 DSH 的本机运行，云端测试不替代它们。
