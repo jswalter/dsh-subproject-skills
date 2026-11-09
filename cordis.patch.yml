@@ -1,4 +1,4 @@
 - insert:
     - id: subproject-skills
-      name: dsh-subproject-skills
+      name: "@jswalter/dsh-subproject-skills"
       config: {}

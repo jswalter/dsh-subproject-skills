@@ -6,13 +6,13 @@ const os = require('node:os');
 const { createRequire } = require('node:module');
 const { spawnSync } = require('node:child_process');
 const definitions = {
-  skills: { directory: 'subproject-skills', id: 'subproject-skills', package: 'dsh-subproject-skills', marker: 'subproject-skills' },
+  skills: { directory: 'subproject-skills', id: 'subproject-skills', package: '@jswalter/dsh-subproject-skills', legacyPackage: 'dsh-subproject-skills', marker: 'subproject-skills' },
 };
 function argumentsOf(argv) {
   const result = {};
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
-    if (['--dry-run', '--uninstall', '--help', '--local'].includes(key)) result[key.slice(2)] = true;
+    if (['--dry-run', '--uninstall', '--help', '--local', '--git'].includes(key)) result[key.slice(2)] = true;
     else if (['--home', '--resources', '--workspace'].includes(key) && argv[i + 1]) result[key.slice(2)] = argv[++i];
     else throw new Error(`Unknown option: ${key}`);
   }
@@ -39,13 +39,13 @@ function rewrite(text, def, config, yaml, uninstall = false) {
 async function main(kind, argv = process.argv.slice(2)) {
   const def = definitions[kind]; if (!def) throw new Error('Unknown local plugin');
   const args = argumentsOf(argv);
-  if (args.help) { console.log('--workspace PATH --resources PATH --home PATH --dry-run --uninstall --local'); return; }
+  if (args.help) { console.log('--workspace PATH --resources PATH --home PATH --dry-run --uninstall --local --git'); return; }
   const resources = path.resolve(args.resources || '/Applications/DeepSeek Harness.app/Contents/Resources');
   const req = createRequire(path.join(resources, 'app.asar', 'dsh', 'package.json'));
   const yaml = req('yaml');
   const source = path.resolve(__dirname, '..');
   const remote = `git+https://github.com/jswalter/dsh-${def.directory}.git#main`;
-  const specifier = args.local ? `link:${source}` : remote;
+  const specifier = args.local ? `link:${source}` : args.git ? remote : 'latest';
   const home = path.resolve(args.home || process.env.DSH_HOME || path.join(os.homedir(), '.dsh'));
   const profile = path.join(home, 'profiles', 'desktop');
   const patchFile = path.join(profile, 'cordis.patch.yml');
@@ -78,15 +78,25 @@ async function main(kind, argv = process.argv.slice(2)) {
   // Re-adding the same Git specifier can reuse the old locked commit. Explicit
   // update resolves the remote branch again while retaining its Git source.
   const previousManifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
-  const updating = !args.local && previousManifest.dependencies?.[def.package] === specifier;
+  const updating = !!args.git && previousManifest.dependencies?.[def.package] === specifier;
   const operation = args.uninstall ? 'remove' : updating ? 'update' : 'add';
   const command = ['plugin', '--profile', 'desktop', operation, ...(args.uninstall ? [def.package] : ['--ignore-scripts', updating ? def.package : `${def.package}@${specifier}`])];
-  if (args['dry-run']) { console.log(JSON.stringify({ package: def.package, source: specifier, command, config, patch: patchFile }, null, 2)); return; }
+  const legacySource = previousManifest.dependencies?.[def.legacyPackage];
+  if (args['dry-run']) { console.log(JSON.stringify({ package: def.package, source: specifier, command, migratingFrom: legacySource ? def.legacyPackage : undefined, config, patch: patchFile }, null, 2)); return; }
   const backup = path.join(home, 'backups', `local-bundle-${kind}-${Date.now()}`);
   fs.mkdirSync(backup, { recursive: true, mode: 0o700 });
   for (const file of ['package.json','cordis.patch.yml','pnpm-lock.yaml']) if (fs.existsSync(path.join(profile,file))) fs.copyFileSync(path.join(profile,file),path.join(backup,file));
   const cli = path.join(resources, 'app.asar', 'dsh', 'node_modules', '@deepseek-ai', 'dsh-desktop-host', 'lib', 'cli.js');
-  const run = spawnSync(process.execPath, ['--expose-internals', cli, ...command], { stdio: 'inherit', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', DSH_HOME: home } });
+  const invoke = command => spawnSync(process.execPath, ['--expose-internals', cli, ...command], { stdio: 'inherit', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', DSH_HOME: home } });
+  if (legacySource && !args.uninstall) {
+    const removed = invoke(['plugin', '--profile', 'desktop', 'remove', def.legacyPackage]);
+    if (removed.status !== 0) throw new Error(`Could not migrate legacy package. Backup: ${backup}`);
+  }
+  const run = invoke(command);
+  if (run.status !== 0 && legacySource && !args.uninstall) {
+    const restored = invoke(['plugin', '--profile', 'desktop', 'add', '--ignore-scripts', `${def.legacyPackage}@${legacySource}`]);
+    if (restored.status !== 0) throw new Error(`Migration and legacy package restore failed. Backup: ${backup}`);
+  }
   if (run.status !== 0) throw new Error(`Official DSH installer failed; patch unchanged. Backup: ${backup}`);
   if ((fs.existsSync(patchFile) ? fs.readFileSync(patchFile,'utf8') : '') !== old) throw new Error(`Config changed during installation; review backup ${backup}`);
   if (kind === 'selection' && !args.uninstall) {

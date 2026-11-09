@@ -1,8 +1,8 @@
 # DSH 子项目技能插件
 
-项目地址：[jswalter/dsh-subproject-skills](https://github.com/jswalter/dsh-subproject-skills)，版本 1.2.0。按 DSH 聊天工作目录加载一个多项目工作区内的直属子项目技能，防止兄弟项目的同名技能互相混入。
+项目地址：[jswalter/dsh-subproject-skills](https://github.com/jswalter/dsh-subproject-skills)，版本 1.2.1。按 DSH 聊天工作目录加载一个多项目工作区内的直属子项目技能，防止兄弟项目的同名技能互相混入。
 
-本仓库包含完整源码及安装器，不依赖其他仓库。包名为 `dsh-subproject-skills`；工作区由 `--workspace` 指定，可用于任意包含直属子项目的工作区。
+本仓库包含完整源码及安装器，不依赖其他仓库。包名为 `@jswalter/dsh-subproject-skills`；工作区由 `--workspace` 指定，可用于任意包含直属子项目的工作区。
 
 ## 安装与更新
 
@@ -17,22 +17,28 @@ sh install.command --workspace '/你的多项目工作区' --dry-run
 sh install.command --workspace '/你的多项目工作区'
 ```
 
-安装器调用 DSH 官方 CLI，将来源注册为 `git+https://github.com/jswalter/dsh-subproject-skills.git#main`，再写入本机工作区和 DSH 模块路径。已安装代码位于 DSH profile 内，不依赖下载目录；移动开发仓库不影响正常运行。已有 `workspaceRoot` 会保留，可用 `--workspace` 修改。首次安装必须指定绝对路径，不会从插件所在位置推断。
+安装器调用 DSH 官方 CLI，默认从 npm 安装 `@jswalter/dsh-subproject-skills@latest`，再写入本机工作区和 DSH 模块路径。已安装代码位于 DSH profile 内，不依赖下载目录；移动开发仓库不影响正常运行。已有 `workspaceRoot` 会保留，可用 `--workspace` 修改。首次安装必须指定绝对路径，不会从插件所在位置推断。
 
-非默认应用位置设置 `DSH_APP_PATH='/实际位置/DeepSeek Harness.app'`；自定义配置目录传 `--home '/实际 DSH_HOME'`。`--dry-run` 只预览，`--local` 仅用于开发时切回本地链接。
+### 在 DSH 内更新
 
-更新时，退出 DSH 后执行：
+完成 npm 来源安装后，使用 **DSH 插件管理页 → 检查更新**，选择新版本更新。检查的是 npm 上发布的更高版本；单独向 GitHub 推送提交不会产生更新提示。若 DSH 提示需要重启，请重启应用。更新保留现有工作区配置。
+
+旧版从 GitHub 安装的插件需要一次迁移：等待 DSH 任务结束并退出应用，在源码仓库执行：
 
 ```sh
 git pull --ff-only
-sh install.command --workspace '/你的多项目工作区'
+sh install.command
 ```
 
-也可从已安装包更新，不保留源码：
+迁移会将旧包名替换为 `@jswalter/dsh-subproject-skills`。已有工作区配置会自动沿用，无需再次指定 `--workspace`。`git pull` 只更新源码，安装命令才会将 DSH 中的插件迁移为 npm 来源。完成后重新打开 DSH。
+
+已有新版安装器时，也可退出 DSH 后从已安装包更新：
 
 ```sh
-sh "${DSH_HOME:-$HOME/.dsh}/profiles/desktop/node_modules/dsh-subproject-skills/install.command" --workspace '/你的多项目工作区'
+sh "${DSH_HOME:-$HOME/.dsh}/profiles/desktop/node_modules/@jswalter/dsh-subproject-skills/install.command"
 ```
+
+非默认应用位置设置 `DSH_APP_PATH='/实际位置/DeepSeek Harness.app'`；自定义配置目录传 `--home '/实际 DSH_HOME'`。`--dry-run` 只预览，`--local` 使用本地开发链接，`--git` 使用 GitHub `main`。后两种来源不参与当前 DSH 的内置版本检查；重新运行默认安装命令可迁回 npm。
 
 ### Windows
 
