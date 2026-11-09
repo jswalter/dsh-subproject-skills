@@ -1,6 +1,6 @@
 # DSH 子项目技能插件
 
-项目地址：[jswalter/dsh-subproject-skills](https://github.com/jswalter/dsh-subproject-skills)，版本 1.2.1。按 DSH 聊天工作目录加载一个多项目工作区内的直属子项目技能，防止兄弟项目的同名技能互相混入。
+项目地址：[jswalter/dsh-subproject-skills](https://github.com/jswalter/dsh-subproject-skills)，版本 1.2.2。按 DSH 聊天工作目录加载一个多项目工作区内的直属子项目技能，防止兄弟项目的同名技能互相混入。
 
 本仓库包含完整源码及安装器，不依赖其他仓库。包名为 `@jswalter/dsh-subproject-skills`；工作区由 `--workspace` 指定，可用于任意包含直属子项目的工作区。
 

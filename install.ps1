@@ -15,7 +15,6 @@ if (-not $AppPath) {
     $AppPath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 }
 if (-not $AppPath -or -not (Test-Path $AppPath)) { throw 'Pass -AppPath with the full path to the installed DeepSeek Harness.exe.' }
-if (-not $Uninstall -and -not $Workspace) { $Workspace = Read-Host 'Absolute path to your multi-project workspace on this computer' }
 $parameters = @('--expose-internals', (Join-Path $PSScriptRoot 'install.cjs'), '--resources', (Join-Path (Split-Path $AppPath) 'resources'))
 if ($Workspace) { $parameters += @('--workspace', $Workspace) }
 if ($DshHome) { $parameters += @('--home', $DshHome) }

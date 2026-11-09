@@ -1,6 +1,6 @@
 {
   "name": "@jswalter/dsh-subproject-skills",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "type": "module",
   "description": "DSH per-session skills for independent subprojects in one workspace",
   "main": "index.mjs",

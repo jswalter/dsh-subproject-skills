@@ -35,3 +35,20 @@ test('published bundle parses and resolves its own package',()=>{
  assert.equal(patch[0].insert[0].name,manifest.name);
  assert.equal(Object.values(definitions)[0].package,manifest.name);
 });
+
+test('macOS launcher forwards an update without prompting for workspace',()=>{
+ const fs=require('node:fs');
+ const os=require('node:os');
+ const {spawnSync}=require('node:child_process');
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'dsh-skills-launcher-'));
+ try {
+  const binary=path.join(root,'Contents/MacOS/DeepSeek Harness');
+  fs.mkdirSync(path.dirname(binary),{recursive:true});
+  fs.writeFileSync(binary,'#!/bin/sh\nprintf "%s\\n" "$@"\n',{mode:0o755});
+  const result=spawnSync('sh',[path.join(__dirname,'../install.command')],{encoding:'utf8',input:'',env:{...process.env,DSH_APP_PATH:root}});
+  assert.equal(result.status,0,result.stderr);
+  assert.ok(result.stdout.includes('install.cjs'));
+  assert.ok(!result.stdout.includes('--workspace'));
+  assert.ok(!result.stdout.includes('Enter the absolute'));
+ } finally { fs.rmSync(root,{recursive:true,force:true}); }
+});
